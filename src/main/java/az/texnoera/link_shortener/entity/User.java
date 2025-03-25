@@ -31,7 +31,8 @@ public class User implements UserDetails {
     private Set<Role> roles = new HashSet<>();
     @Enumerated(EnumType.STRING)
     private Status status;
-
+    @OneToMany(mappedBy = "user")
+    private Set<Url> links = new HashSet<>();
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).toList();

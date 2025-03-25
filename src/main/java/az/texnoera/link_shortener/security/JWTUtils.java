@@ -56,10 +56,11 @@ public class JWTUtils {
     }
 
     public Claims parseJwtToken(String authToken) {
+        String token  = authToken.trim();
         return Jwts.parserBuilder()
                 .setSigningKey(getKey())
                 .build()
-                .parseClaimsJws(authToken)
+                .parseClaimsJws(token)
                 .getBody();
     }
 }

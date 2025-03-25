@@ -33,7 +33,8 @@ public class CustomFilter extends OncePerRequestFilter {
             Claims claims = jwtUtils.parseJwtToken(jwtToken);
             String email = claims.getSubject();
             UserDetails user = userDetailsService.loadUserByUsername(email);
-            Authentication auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            Authentication auth = new UsernamePasswordAuthenticationToken(user, null,
+                    user.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
     }

@@ -41,6 +41,7 @@ public class SecurityConfig {
                         auth.requestMatchers("v1/auth/**").permitAll()
                                 .requestMatchers("v1/auth/verifying-code").permitAll()
                                 .requestMatchers("v1/auth/login").permitAll()
+                                .requestMatchers("/{short-code}").permitAll()
                                 .requestMatchers(permitSwagger).permitAll()
                                 .requestMatchers("/test").hasRole("ADMIN")
                                 .anyRequest().authenticated()
