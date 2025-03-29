@@ -6,10 +6,12 @@ import az.texnoera.link_shortener.entity.User;
 import az.texnoera.link_shortener.enums.Status;
 import az.texnoera.link_shortener.repository.RoleRepository;
 import az.texnoera.link_shortener.repository.UserRepository;
+import az.texnoera.link_shortener.response.UserDetailsResponse;
 import az.texnoera.link_shortener.response.UserResponse;
 import az.texnoera.link_shortener.security.JWTUtils;
 import az.texnoera.link_shortener.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,7 +30,10 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
-   private final JWTUtils jwtUtils;
+    private final JWTUtils jwtUtils;
+    @Value("${file.download-url}")
+    private String downloadUrl;
+
     public String register(UserRegisterRequest userRegisterRequest) {
         User user = new User();
         Integer otp = generateOtp();
@@ -76,19 +81,19 @@ public class UserService {
 
     public UserResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
-        if(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())
+        if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())
                 && user.getStatus() == Status.ACTIVE) {
             String token = jwtUtils.generateJwtToken(user.getUsername(),
                     user.getRoles().stream().map(Role::getName).toList());
 
-           return  new UserResponse(token, user.getFullName());
+            return new UserResponse(token, user.getFullName());
         }
         throw new RuntimeException("Invalid password or email");
     }
 
     public String sendOtp(ForgetPasswordRequest forgetPasswordRequest) {
-        User user = userRepository.findByEmail(forgetPasswordRequest.getEmail()).orElseThrow(()-> new RuntimeException("Email not found"));
-        int otp = generateOtp() ;
+        User user = userRepository.findByEmail(forgetPasswordRequest.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
+        int otp = generateOtp();
         user.setOtp(otp);
         user.setExpiryDate(LocalDateTime.now().plusMinutes(3));
         userRepository.save(user);
@@ -103,10 +108,10 @@ public class UserService {
 
     public boolean checkOtp(VerificationRequest otp) {
         User user = userRepository.findByEmail(otp.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
-        if(!user.getOtp().equals(otp.getOtp())) {
+        if (!user.getOtp().equals(otp.getOtp())) {
             throw new RuntimeException("Invalid otp");
         }
-        if(LocalDateTime.now().isAfter(user.getExpiryDate())) {
+        if (LocalDateTime.now().isAfter(user.getExpiryDate())) {
             throw new RuntimeException("Expired otp");
         }
         user.setIsVerified(true);
@@ -117,10 +122,10 @@ public class UserService {
 
     public String resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
-        if(!user.getIsVerified()){
+        if (!user.getIsVerified()) {
             throw new RuntimeException("User is not verified");
         }
-        if(!user.getOtp().equals(request.getOtp())) {
+        if (!user.getOtp().equals(request.getOtp())) {
             throw new RuntimeException("Invalid otp");
         }
 
@@ -130,5 +135,16 @@ public class UserService {
         userRepository.save(user);
 
         return "Password changed";
+    }
+
+    public UserDetailsResponse getUser(Integer id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return UserDetailsResponse.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .photoUrl(downloadUrl+user.getProfilePhoto())
+                .build();
     }
 }

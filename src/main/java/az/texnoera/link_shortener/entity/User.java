@@ -27,6 +27,7 @@ public class User implements UserDetails {
     private Integer otp;
     private Boolean isVerified=false;
     private LocalDateTime expiryDate;
+    private String profilePhoto;
     @ManyToMany
     private Set<Role> roles = new HashSet<>();
     @Enumerated(EnumType.STRING)

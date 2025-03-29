@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 .requestMatchers("v1/auth/verifying-code").permitAll()
                                 .requestMatchers("v1/auth/login").permitAll()
                                 .requestMatchers("/{short-code:[a-zA-Z0-9]{5,}}").permitAll()
+                                .requestMatchers("/profile/download/{file-name}").permitAll()
                                 .requestMatchers(permitSwagger).permitAll()
                                 .anyRequest().authenticated()
                 );
