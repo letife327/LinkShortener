@@ -9,5 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class UrlRequest {
+    private String title;
     private String originalUrl;
+
 }

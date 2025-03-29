@@ -14,6 +14,7 @@ public class SecurityUtils {
 
   public static User getCurrentUser() {
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      System.out.println(authentication.getPrincipal());
       if (authentication != null && authentication.getPrincipal() instanceof User ) {
           return (User) authentication.getPrincipal();
       }

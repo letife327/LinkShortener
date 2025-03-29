@@ -6,7 +6,9 @@ import az.texnoera.link_shortener.entity.User;
 import az.texnoera.link_shortener.enums.Status;
 import az.texnoera.link_shortener.repository.RoleRepository;
 import az.texnoera.link_shortener.repository.UserRepository;
+import az.texnoera.link_shortener.response.UserResponse;
 import az.texnoera.link_shortener.security.JWTUtils;
+import az.texnoera.link_shortener.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -72,13 +74,14 @@ public class UserService {
         return "User successfully verified";
     }
 
-    public String login(LoginRequest loginRequest) {
+    public UserResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
         if(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())
                 && user.getStatus() == Status.ACTIVE) {
+            String token = jwtUtils.generateJwtToken(user.getUsername(),
+                    user.getRoles().stream().map(Role::getName).toList());
 
-           return  jwtUtils.generateJwtToken(user.getUsername(),
-                   user.getRoles().stream().map(Role::getName).toList());
+           return  new UserResponse(token, user.getFullName());
         }
         throw new RuntimeException("Invalid password or email");
     }

@@ -1,6 +1,7 @@
 package az.texnoera.link_shortener.controller;
 
 import az.texnoera.link_shortener.request.*;
+import az.texnoera.link_shortener.response.UserResponse;
 import az.texnoera.link_shortener.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class AuthController {
         return userService.verifyingCode(otp);
     }
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest loginRequest) {
+    public UserResponse login(@RequestBody LoginRequest loginRequest) {
         return userService.login(loginRequest);
     }
     @PostMapping("/send-otp")

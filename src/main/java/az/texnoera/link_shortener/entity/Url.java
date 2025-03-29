@@ -20,10 +20,14 @@ public class Url {
     private Long counter;
     private String url;
     private String shortCode;
+    private String title;
+    private Integer redisCounter=0;
     @Timestamp
     private LocalDateTime createTime;
     @Timestamp
     private LocalDateTime expireTime;
+    @Timestamp
+    private LocalDateTime lastVisitTime;
     @ManyToOne
     private User user;
 }

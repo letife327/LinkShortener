@@ -3,6 +3,7 @@ package az.texnoera.link_shortener.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -21,7 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final  CustomFilter customFilter;
+    private final CustomFilter customFilter;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -37,19 +39,19 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth->
+                .authorizeHttpRequests(auth ->
                         auth.requestMatchers("v1/auth/**").permitAll()
                                 .requestMatchers("v1/auth/verifying-code").permitAll()
                                 .requestMatchers("v1/auth/login").permitAll()
-                                .requestMatchers("/{short-code}").permitAll()
+                                .requestMatchers("/{short-code:[a-zA-Z0-9]{5,}}").permitAll()
                                 .requestMatchers(permitSwagger).permitAll()
-                                .requestMatchers("/test").hasRole("ADMIN")
                                 .anyRequest().authenticated()
-                        );
-http.addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
+                );
+        http.addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
 
     }
+
     private final String[] permitSwagger = {
             "/v3/api-docs/**",
             "/v3/api-docs.yanl",

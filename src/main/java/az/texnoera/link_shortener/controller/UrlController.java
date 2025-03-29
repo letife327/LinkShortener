@@ -6,12 +6,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping()
+@RequestMapping
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin
 public class UrlController {
     private final UrlService urlService;
-    private String shortUrl;
 
     @PostMapping("/change-url")
     public String changeUrl(@RequestBody UrlRequest urlRequest) {
@@ -22,6 +22,5 @@ public class UrlController {
     public void getShortenerUrl(@PathVariable(value = "short-code") String shortCode,
                                                 HttpServletResponse response) {
          urlService.getShortenerUrl(shortCode,response);
-
     }
 }
