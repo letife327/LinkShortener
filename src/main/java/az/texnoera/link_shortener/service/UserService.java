@@ -1,6 +1,8 @@
 package az.texnoera.link_shortener.service;
 
 import az.texnoera.link_shortener.entity.Url;
+import az.texnoera.link_shortener.enums.StatusCodeForException;
+import az.texnoera.link_shortener.exception.BaseException;
 import az.texnoera.link_shortener.mapper.UrlMapper;
 import az.texnoera.link_shortener.repository.UrlRepository;
 import az.texnoera.link_shortener.request.*;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -82,12 +85,12 @@ public class UserService {
     }
 
     public String verifyingCode(VerificationRequest request) {
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND,StatusCodeForException.USER_NOT_FOUND));
         if (!user.getOtp().equals(request.getOtp())) {
-            return "User not verified";
+            throw new BaseException(HttpStatus.BAD_REQUEST,StatusCodeForException.INVALID_OTP);
         }
         if (LocalDateTime.now().isAfter(user.getExpiryDate())) {
-            throw new RuntimeException("Expired otp");
+            throw new BaseException(HttpStatus.BAD_REQUEST,StatusCodeForException.EXPIRED_OTP);
         }
         user.setStatus(Status.ACTIVE);
         userRepository.save(user);
@@ -95,7 +98,7 @@ public class UserService {
     }
 
     public UserResponse login(LoginRequest loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
+        User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND,StatusCodeForException.USER_NOT_FOUND));
         if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())
                 && user.getStatus() == Status.ACTIVE) {
             String token = jwtUtils.generateJwtToken(user.getUsername(),
@@ -103,11 +106,11 @@ public class UserService {
 
             return new UserResponse(user.getId(), token, user.getFullName(), user.getEmail());
         }
-        throw new RuntimeException("Invalid password or email");
+        throw new BaseException(HttpStatus.BAD_REQUEST,StatusCodeForException.INVALID_PASSWORD_OR_EMAIL);
     }
 
     public String sendOtp(ForgetPasswordRequest forgetPasswordRequest) {
-        User user = userRepository.findByEmail(forgetPasswordRequest.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
+        User user = userRepository.findByEmail(forgetPasswordRequest.getEmail()).orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND,StatusCodeForException.USER_NOT_FOUND));
         int otp = generateOtp();
         user.setOtp(otp);
         user.setExpiryDate(LocalDateTime.now().plusMinutes(3));
@@ -124,10 +127,10 @@ public class UserService {
     public boolean checkOtp(VerificationRequest otp) {
         User user = userRepository.findByEmail(otp.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
         if (!user.getOtp().equals(otp.getOtp())) {
-            throw new RuntimeException("Invalid otp");
+            throw new BaseException(HttpStatus.NOT_FOUND, StatusCodeForException.INVALID_OTP);
         }
         if (LocalDateTime.now().isAfter(user.getExpiryDate())) {
-            throw new RuntimeException("Expired otp");
+            throw new BaseException(HttpStatus.BAD_REQUEST,StatusCodeForException.EXPIRED_OTP);
         }
         user.setIsVerified(true);
         user.setStatus(Status.ACTIVE);
@@ -138,10 +141,10 @@ public class UserService {
     public String resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("Email not found"));
         if (!user.getIsVerified()) {
-            throw new RuntimeException("User is not verified");
+            throw new BaseException(HttpStatus.BAD_REQUEST, StatusCodeForException.USER_IS_NOT_VERIFIED);
         }
         if (!user.getOtp().equals(request.getOtp())) {
-            throw new RuntimeException("Invalid otp");
+            throw new BaseException(HttpStatus.NOT_FOUND, StatusCodeForException.USER_NOT_FOUND) ;
         }
 
         user.setStatus(Status.ACTIVE);
@@ -154,7 +157,7 @@ public class UserService {
 
     public UserDetailsResponse getUser(Integer id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND, StatusCodeForException.USER_NOT_FOUND) );
         return UserDetailsResponse.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
@@ -165,13 +168,14 @@ public class UserService {
 
     public void updateUser(Integer id, ProfileEditRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND, StatusCodeForException.USER_NOT_FOUND) );
         user.setFullName(request.getFullName());
         userRepository.save(user);
     }
 
     public PageResult<UrlResponse> getUrlListForUser(Integer userId, Integer size, Integer page) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND, StatusCodeForException.USER_NOT_FOUND) );
         Pageable pages = PageRequest.of(page, size);
         Page<Url> pageUrl = urlRepository.findAllUrlsByUserId(user.getId(), pages);
         List<UrlResponse> urlResponses = UrlMapper.entityToResponse(pageUrl);

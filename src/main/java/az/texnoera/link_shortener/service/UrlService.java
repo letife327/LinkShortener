@@ -2,6 +2,8 @@ package az.texnoera.link_shortener.service;
 
 import az.texnoera.link_shortener.entity.Url;
 import az.texnoera.link_shortener.entity.User;
+import az.texnoera.link_shortener.enums.StatusCodeForException;
+import az.texnoera.link_shortener.exception.BaseException;
 import az.texnoera.link_shortener.repository.UrlRepository;
 import az.texnoera.link_shortener.request.UrlRequest;
 import az.texnoera.link_shortener.security.SecurityUtils;
@@ -66,7 +68,7 @@ public class UrlService {
 
         Url url = urlRepository.findByShortCode(shortCode);
         if (url.getUrl() == null) {
-            throw new RuntimeException("url not found");
+            throw new BaseException(HttpStatus.NOT_FOUND, StatusCodeForException.URL_NOT_FOUND);
         }
         response.setStatus(HttpStatus.FOUND.value());
         response.addHeader("Location", url.getUrl());
