@@ -1,6 +1,7 @@
 package az.texnoera.link_shortener.service;
 
 import az.texnoera.link_shortener.entity.Url;
+import az.texnoera.link_shortener.mapper.UrlMapper;
 import az.texnoera.link_shortener.repository.UrlRepository;
 import az.texnoera.link_shortener.request.*;
 import az.texnoera.link_shortener.entity.Role;
@@ -173,13 +174,7 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Pageable pages = PageRequest.of(page, size);
         Page<Url> pageUrl = urlRepository.findAllUrlsByUserId(user.getId(), pages);
-        List<UrlResponse> urlResponses = pageUrl.stream().map(url -> {
-            return UrlResponse.builder()
-                    .title(url.getTitle())
-                    .originalUrl(url.getUrl())
-                    .shortenedUrl(url.getShortCode())
-                    .build();
-        }).toList();
+        List<UrlResponse> urlResponses = UrlMapper.entityToResponse(pageUrl);
         return new PageResult<>(urlResponses, page, size, pageUrl.getTotalPages());
     }
 }
