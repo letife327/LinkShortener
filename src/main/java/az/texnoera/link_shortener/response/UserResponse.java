@@ -9,6 +9,8 @@ import lombok.*;
 @Getter
 @ToString
 public class UserResponse {
+    private Integer id;
     private String token;
     private String fullName;
+    private String email;
 }

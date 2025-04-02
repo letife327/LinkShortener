@@ -1,26 +1,35 @@
 package az.texnoera.link_shortener.service;
 
+import az.texnoera.link_shortener.entity.Url;
+import az.texnoera.link_shortener.repository.UrlRepository;
 import az.texnoera.link_shortener.request.*;
 import az.texnoera.link_shortener.entity.Role;
 import az.texnoera.link_shortener.entity.User;
 import az.texnoera.link_shortener.enums.Status;
 import az.texnoera.link_shortener.repository.RoleRepository;
 import az.texnoera.link_shortener.repository.UserRepository;
+import az.texnoera.link_shortener.response.UrlResponse;
 import az.texnoera.link_shortener.response.UserDetailsResponse;
 import az.texnoera.link_shortener.response.UserResponse;
+import az.texnoera.link_shortener.result.PageResult;
 import az.texnoera.link_shortener.security.JWTUtils;
 import az.texnoera.link_shortener.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -28,6 +37,7 @@ import java.util.Set;
 public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UrlRepository urlRepository;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
     private final JWTUtils jwtUtils;
@@ -41,10 +51,11 @@ public class UserService {
         user.setEmail(userRegisterRequest.getEmail());
         user.setPassword(passwordEncoder.encode(userRegisterRequest.getPassword()));
         Role role = roleRepository.findByName("USER");
-        Set roles = new HashSet();
+        Set<Role> roles = new HashSet<>();
         roles.add(role);
         user.setRoles(roles);
         user.setOtp(otp);
+        user.setExpiryDate(LocalDateTime.now().plusMinutes(2));
         user.setStatus(Status.INACTIVE);
         userRepository.save(user);
         Thread thread = new Thread(() -> {
@@ -74,6 +85,9 @@ public class UserService {
         if (!user.getOtp().equals(request.getOtp())) {
             return "User not verified";
         }
+        if (LocalDateTime.now().isAfter(user.getExpiryDate())) {
+            throw new RuntimeException("Expired otp");
+        }
         user.setStatus(Status.ACTIVE);
         userRepository.save(user);
         return "User successfully verified";
@@ -86,7 +100,7 @@ public class UserService {
             String token = jwtUtils.generateJwtToken(user.getUsername(),
                     user.getRoles().stream().map(Role::getName).toList());
 
-            return new UserResponse(token, user.getFullName());
+            return new UserResponse(user.getId(), token, user.getFullName(), user.getEmail());
         }
         throw new RuntimeException("Invalid password or email");
     }
@@ -144,7 +158,28 @@ public class UserService {
                 .id(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
-                .photoUrl(downloadUrl+user.getProfilePhoto())
+                .photoUrl(downloadUrl + user.getProfilePhoto())
                 .build();
+    }
+
+    public void updateUser(Integer id, ProfileEditRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setFullName(request.getFullName());
+        userRepository.save(user);
+    }
+
+    public PageResult<UrlResponse> getUrlListForUser(Integer userId, Integer size, Integer page) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Pageable pages = PageRequest.of(page, size);
+        Page<Url> pageUrl = urlRepository.findAllUrlsByUserId(user.getId(), pages);
+        List<UrlResponse> urlResponses = pageUrl.stream().map(url -> {
+            return UrlResponse.builder()
+                    .title(url.getTitle())
+                    .originalUrl(url.getUrl())
+                    .shortenedUrl(url.getShortCode())
+                    .build();
+        }).toList();
+        return new PageResult<>(urlResponses, page, size, pageUrl.getTotalPages());
     }
 }

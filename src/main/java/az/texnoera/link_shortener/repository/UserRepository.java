@@ -1,6 +1,7 @@
 package az.texnoera.link_shortener.repository;
 
 import az.texnoera.link_shortener.entity.User;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
