@@ -90,6 +90,7 @@ public class UserService {
             throw new BaseException(HttpStatus.BAD_REQUEST,StatusCodeForException.INVALID_OTP);
         }
         if (LocalDateTime.now().isAfter(user.getExpiryDate())) {
+            userRepository.delete(user);
             throw new BaseException(HttpStatus.BAD_REQUEST,StatusCodeForException.EXPIRED_OTP);
         }
         user.setStatus(Status.ACTIVE);

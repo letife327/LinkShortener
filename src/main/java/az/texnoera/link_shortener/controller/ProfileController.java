@@ -3,6 +3,7 @@ package az.texnoera.link_shortener.controller;
 import az.texnoera.link_shortener.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
