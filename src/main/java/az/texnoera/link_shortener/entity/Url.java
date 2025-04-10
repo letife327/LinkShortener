@@ -21,7 +21,6 @@ public class Url {
     private String url;
     private String shortCode;
     private String title;
-    private Integer redisCounter=0;
     @Timestamp
     private LocalDateTime createTime;
     @Timestamp
