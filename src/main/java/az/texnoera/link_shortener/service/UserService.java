@@ -49,6 +49,9 @@ public class UserService {
     private String downloadUrl;
 
     public String register(UserRegisterRequest userRegisterRequest) {
+        if(userRepository.existsUserByEmail(userRegisterRequest.getEmail())){
+            throw new BaseException(HttpStatus.BAD_REQUEST,StatusCodeForException.USER_ALREADY_EXISTS);
+        }
         User user = new User();
         Integer otp = generateOtp();
         user.setFullName(userRegisterRequest.getFullName());
