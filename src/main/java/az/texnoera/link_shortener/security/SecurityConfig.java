@@ -70,7 +70,7 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://127.0.0.1:5500")); // Frontend’in çalıştığı domaini ekle
+        config.setAllowedOrigins(List.of("http://127.0.0.1:5500","https://s.shamilabilov.social")); // Frontend’in çalıştığı domaini ekle
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
