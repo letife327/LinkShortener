@@ -36,7 +36,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig implements WebMvcConfigurer {
     private final CustomFilter customFilter;
-
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -61,6 +61,9 @@ public class SecurityConfig implements WebMvcConfigurer {
                                 .requestMatchers("/profile/download/{file-name}").permitAll()
                                 .requestMatchers(permitSwagger).permitAll()
                                 .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
                 );
         http.addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
