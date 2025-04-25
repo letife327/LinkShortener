@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: letife327
+      changes:
+        - createTable:
+            tableName: urls
+            columns:
+              - column:
+                  name: counter
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: url
+                  type: varchar(255)
+              - column:
+                  name: short_code
+                  type: varchar(255)
+              - column:
+                  name: title
+                  type: varchar(255)
+              - column:
+                  name: create_time
+                  type: timestamp
+              - column:
+                  name: expire_time
+                  type: timestamp
+              - column:
+                  name: last_visit_time
+                  type: timestamp
+              - column:
+                  name: user_id
+                  type: int
+        - addForeignKeyConstraint:
+            baseTableName: urls
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_urls_user

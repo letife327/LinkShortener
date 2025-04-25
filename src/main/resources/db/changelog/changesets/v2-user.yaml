@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: chatgpt
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: full_name
+                  type: varchar(255)
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: password
+                  type: varchar(255)
+              - column:
+                  name: otp
+                  type: int
+              - column:
+                  name: is_verified
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: expiry_date
+                  type: timestamp
+              - column:
+                  name: profile_photo
+                  type: varchar(255)
+              - column:
+                  name: status
+                  type: varchar(255)

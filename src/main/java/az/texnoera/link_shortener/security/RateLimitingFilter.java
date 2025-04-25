@@ -40,6 +40,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         String key  = "rate limit:"+clientIP+path;
         try(Jedis jedis = jedisPool.getResource()) {
             String requestCount = jedis.get(key);
+            System.out.println(requestCount);
             int count = requestCount!=null?Integer.parseInt(requestCount):0;
                 if (count <20) {
                     jedis.incr(key);
